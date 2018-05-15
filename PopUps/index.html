@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Intro to Popups</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.7/esri/css/main.css">
+    <script src="https://js.arcgis.com/4.7/"></script>
+
+    <script>
+        require([
+            "esri/tasks/Locator",
+            "esri/Map",
+            "esri/views/MapView",
+            "dojo/domReady!"
+        ], function(Locator, Map, MapView) {
+
+            var locatorTask = new Locator({
+                url: "https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer"
+            });
+
+            var map = new Map({
+                basemap: "streets"
+
+            })
+
+            var mapView = new MapView({
+                container: "viewDiv",
+                map: map,
+                center: [-116.3031, 43.6088],
+                zoom: 12
+            })
+
+
+            view.on("click", function(event) {
+                event.stopPropagation(); // overwrite default click-for-popup behavior
+
+                // Get the coordinates of the click on the view
+                var lat = Math.round(event.mapPoint.latitude * 1000) / 1000;
+                var lon = Math.round(event.mapPoint.longitude * 1000) / 1000;
+
+                view.popup.open({
+                    // Set the popup's title to the coordinates of the location
+                    title: "Reverse geocode: [" + lon + ", " + lat + "]",
+                    location: event.mapPoint // Set the location of the popup to the clicked location
+                });
+
+                // Display the popup
+                // Execute a reverse geocode using the clicked location
+                locatorTask.locationToAddress(event.mapPoint).then(function(
+                    response) {
+                    // If an address is successfully found, show it in the popup's content
+                    view.popup.content = response.address;
+                }).catch(function(err) {
+                    // If the promise fails and no result is found, show a generic message
+                    view.popup.content =
+                        "No address was found for this location";
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv" />
+</body>
+
+</html>
